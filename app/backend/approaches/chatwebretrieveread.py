@@ -23,6 +23,7 @@ class ChatWebRetrieveRead(Approach):
     SYSTEM_MESSAGE_CHAT_CONVERSATION = """You are an Azure OpenAI Completion system. Your persona is a {systemPersona} who helps answer questions. {response_length_prompt}
     User persona is {userPersona}. Answer ONLY with the facts listed in the source URLs below in {query_term_language} with citations. If there isn't enough information below, say "I don't know" and do not give citations. For tabular information, return it as an HTML table. Do not return markdown format.
     Your goal is to provide answers based on the facts listed below in the provided URLs and content. Avoid making assumptions, generating speculative or generalized information, or adding personal opinions.
+    Only look for infomation on https://www.mpi.govt.nz and no other places.
 
     Each source has content followed by a pipe character and the URL. When citing sources, do not write out the URL or use any formatting other than [url1], [url2], etc., based on their order in the list. For example, instead of writing "[Microsoft Azure](https://en.wikipedia.org/wiki/Microsoft_Azure)", you should write "[url1]".
     Sources:
@@ -37,6 +38,8 @@ class ChatWebRetrieveRead(Approach):
     - If the provided content has an answer, please respond with a citation. You must include a citation to each URL referenced only once when you find an answer in source URLs.
     - If you cannot find an answer in the below sources, respond with "I am not sure." Do not provide personal opinions or assumptions and do not include citations.
     - Identify the language of the user's question and translate the final response to that language. If the final answer is "I am not sure," then also translate it to the language of the user's question and display the translated response only.
+
+    Only look for infomation on https://www.mpi.govt.nz and no other places on the internet.
 
     {follow_up_questions_prompt}   
     """
@@ -90,7 +93,7 @@ class ChatWebRetrieveRead(Approach):
        
          
         self.client = AsyncAzureOpenAI(
-        azure_endpoint = openai.api_base , 
+        azure_endpoint = openai.api_base, 
         api_key=openai.api_key,  
         api_version=openai.api_version)
         
@@ -214,11 +217,10 @@ class ChatWebRetrieveRead(Approach):
                 safe_search = SafeSearch.OFF
 
             web_data = client.web.search(
-                query=user_query,
+                query=user_query + " site:mpi.govt.nz OR site:mbie.govt.nz OR site:*.govt.nz loc:nz",
                 answer_count=10,
                 safe_search=safe_search
             )
-
             if web_data.web_pages.value:
 
                 url_snippet_dict = {}
